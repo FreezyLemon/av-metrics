@@ -23,7 +23,7 @@ pub struct FfmpegDecoder {
 
 impl FfmpegDecoder {
     /// Initialize a new FFMpeg decoder for a given input file
-    pub fn new<P: AsRef<Path>>(input: P) -> Result<Self, String> {
+    pub fn new<P: AsRef<Path>>(input: P, threading_cfg: Option<threading::Config>) -> Result<Self, String> {
         ffmpeg::init().map_err(|e| e.to_string())?;
 
         let input_ctx = format::input(&input).map_err(|e| e.to_string())?;
@@ -34,10 +34,17 @@ impl FfmpegDecoder {
         let stream_index = input.index();
         let mut decoder = ffmpeg::codec::context::Context::from_parameters(input.parameters())
             .map_err(|e| e.to_string())?
-            .decoder()
+            .decoder();
+
+        if let Some(cfg) = threading_cfg {
+            decoder.set_threading(cfg);
+        }
+
+        let mut vid = decoder
             .video()
             .map_err(|e| e.to_string())?;
-        decoder
+
+        vid
             .set_parameters(input.parameters())
             .map_err(|e| e.to_string())?;
 
