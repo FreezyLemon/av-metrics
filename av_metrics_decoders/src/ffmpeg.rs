@@ -5,6 +5,7 @@ use std::path::Path;
 use ffmpeg::codec::{decoder, packet};
 use ffmpeg::format::context;
 use ffmpeg::media::Type;
+use ffmpeg::threading;
 use ffmpeg::util::frame::video::Video;
 use ffmpeg::{format, frame};
 
