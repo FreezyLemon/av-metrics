@@ -41,11 +41,11 @@ impl FfmpegDecoder {
             decoder.set_threading(cfg);
         }
 
-        let mut vid = decoder
+        let mut decoder = decoder
             .video()
             .map_err(|e| e.to_string())?;
 
-        vid
+        decoder
             .set_parameters(input.parameters())
             .map_err(|e| e.to_string())?;
 
