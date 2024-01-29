@@ -210,9 +210,9 @@ fn calculate_plane_psnr_hvs<T: Pixel>(
         }
     }
 
-    let height = plane1.cfg.height;
-    let width = plane1.cfg.width;
-    let stride = plane1.cfg.stride;
+    let height = plane1.cfg.height as usize;
+    let width = plane1.cfg.width as usize;
+    let stride = plane1.cfg.stride as usize;
     let mut p1 = [0i16; 8 * 8];
     let mut p2 = [0i16; 8 * 8];
     let mut dct_p1 = [0i32; 8 * 8];

@@ -107,7 +107,7 @@ pub fn convert_chroma_data<T: Pixel>(
     chroma_pos: ChromaSamplePosition,
     bit_depth: usize,
     source: &[u8],
-    source_stride: usize,
+    source_stride: u32,
     source_bytewidth: usize,
 ) {
     if chroma_pos != ChromaSamplePosition::Vertical {
@@ -117,13 +117,13 @@ pub fn convert_chroma_data<T: Pixel>(
     }
 
     let get_pixel = if source_bytewidth == 1 {
-        fn convert_u8(line: &[u8], index: usize) -> i32 {
-            i32::cast_from(line[index])
+        fn convert_u8(line: &[u8], index: u32) -> i32 {
+            i32::cast_from(line[index as usize])
         }
         convert_u8
     } else {
-        fn convert_u16(line: &[u8], index: usize) -> i32 {
-            let index = index * 2;
+        fn convert_u16(line: &[u8], index: u32) -> i32 {
+            let index = index as usize * 2;
             i32::cast_from(u16::cast_from(line[index + 1]) << 8 | u16::cast_from(line[index]))
         }
         convert_u16
@@ -134,11 +134,11 @@ pub fn convert_chroma_data<T: Pixel>(
     let height = plane_data.cfg.height;
     for y in 0..height {
         // Filter: [4 -17 114 35 -9 1]/128, derived from a 6-tap Lanczos window.
-        let in_row = &source[(y * source_stride)..];
-        let out_row = &mut output_data[(y * width)..];
+        let in_row = &source[(y * source_stride) as usize..];
+        let out_row = &mut output_data[(y * width) as usize..];
         let breakpoint = cmp::min(width, 2);
         for x in 0..breakpoint {
-            out_row[x] = T::cast_from(clamp(
+            out_row[x as usize] = T::cast_from(clamp(
                 (4 * get_pixel(in_row, 0) - 17 * get_pixel(in_row, x.saturating_sub(1))
                     + 114 * get_pixel(in_row, x)
                     + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))
@@ -152,7 +152,7 @@ pub fn convert_chroma_data<T: Pixel>(
         }
         let breakpoint2 = width - 3;
         for x in breakpoint..breakpoint2 {
-            out_row[x] = T::cast_from(clamp(
+            out_row[x as usize] = T::cast_from(clamp(
                 (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
                     + 114 * get_pixel(in_row, x)
                     + 35 * get_pixel(in_row, x + 1)
@@ -165,7 +165,7 @@ pub fn convert_chroma_data<T: Pixel>(
             ));
         }
         for x in breakpoint2..width {
-            out_row[x] = T::cast_from(clamp(
+            out_row[x as usize] = T::cast_from(clamp(
                 (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
                     + 114 * get_pixel(in_row, x)
                     + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))

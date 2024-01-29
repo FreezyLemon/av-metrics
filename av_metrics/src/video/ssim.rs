@@ -317,8 +317,8 @@ fn calculate_plane_ssim<T: Pixel>(
     calculate_plane_ssim_internal(
         &vec1,
         &vec2,
-        plane1.cfg.width,
-        plane1.cfg.height,
+        plane1.cfg.width as usize,
+        plane1.cfg.height as usize,
         sample_max,
         vert_kernel,
         horiz_kernel,
@@ -413,8 +413,8 @@ fn calculate_plane_msssim<T: Pixel>(plane1: &Plane<T>, plane2: &Plane<T>, bit_de
     let mut sample_max = (1 << bit_depth) - 1;
     let mut ssim = [0.0; 5];
     let mut cs = [0.0; 5];
-    let mut width = plane1.cfg.width;
-    let mut height = plane1.cfg.height;
+    let mut width = plane1.cfg.width as usize;
+    let mut height = plane1.cfg.height as usize;
     let mut plane1 = plane_to_vec(plane1);
     let mut plane2 = plane_to_vec(plane2);
 
@@ -445,7 +445,7 @@ fn calculate_plane_msssim<T: Pixel>(plane1: &Plane<T>, plane2: &Plane<T>, bit_de
         * ssim[4].powf(MS_WEIGHT[4])
 }
 
-fn build_gaussian_kernel(sigma: f64, max_len: usize, kernel_weight: usize) -> Vec<i64> {
+fn build_gaussian_kernel(sigma: f64, max_len: u32, kernel_weight: usize) -> Vec<i64> {
     let scale = 1.0 / ((2.0 * PI).sqrt() * sigma);
     let nhisigma2 = -0.5 / sigma.powi(2);
     // Compute the kernel size so that the error in the first truncated
@@ -455,10 +455,10 @@ fn build_gaussian_kernel(sigma: f64, max_len: usize, kernel_weight: usize) -> Ve
     let len = if s >= 1.0 {
         0
     } else {
-        (sigma * (-2.0 * s.log(E)).sqrt()).floor() as usize
+        (sigma * (-2.0 * s.log(E)).sqrt()).floor() as u32
     };
-    let kernel_len = if len >= max_len { max_len - 1 } else { len };
-    let kernel_size = (kernel_len << 1) | 1;
+    let kernel_len = if len >= max_len { max_len - 1 } else { len } as usize;
+    let kernel_size = ((kernel_len << 1) | 1) as usize;
     let mut kernel = vec![0; kernel_size];
     let mut sum = 0;
     for ci in 1..=kernel_len {

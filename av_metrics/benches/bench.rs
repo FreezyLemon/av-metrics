@@ -20,21 +20,21 @@ fn get_video_frame<T: Pixel>(filename: &str) -> Frame<T> {
     let bit_depth = dec.get_bit_depth();
     let color_space = dec.get_colorspace();
     let (chroma_sampling, chroma_sample_pos) = map_y4m_color_space(color_space);
-    let width = dec.get_width();
-    let height = dec.get_height();
-    let bytes = dec.get_bytes_per_sample();
+    let width = dec.get_width() as u32;
+    let height = dec.get_height() as u32;
+    let bytes = dec.get_bytes_per_sample() as u32;
     let frame = dec.read_frame().unwrap();
     let mut f: Frame<T> = Frame::new_with_padding(width, height, chroma_sampling, 0);
 
     let (chroma_width, _) = chroma_sampling.get_chroma_dimensions(width, height);
-    f.planes[0].copy_from_raw_u8(frame.get_y_plane(), width * bytes, bytes);
+    f.planes[0].copy_from_raw_u8(frame.get_y_plane(), width * bytes, bytes as usize);
     convert_chroma_data(
         &mut f.planes[1],
         chroma_sample_pos,
         bit_depth,
         frame.get_u_plane(),
         chroma_width * bytes,
-        bytes,
+        bytes as usize,
     );
     convert_chroma_data(
         &mut f.planes[2],
@@ -42,7 +42,7 @@ fn get_video_frame<T: Pixel>(filename: &str) -> Frame<T> {
         bit_depth,
         frame.get_v_plane(),
         chroma_width * bytes,
-        bytes,
+        bytes as usize,
     );
 
     f

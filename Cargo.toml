@@ -5,6 +5,7 @@ members = [
     "av_metrics_decoders",
     "av_metrics_tests",
 ]
+resolver = "2"
 
 [profile.dev]
 opt-level = 1
@@ -16,3 +17,4 @@ codegen-units = 1
 [patch.crates-io]
 av-metrics = { path = "av_metrics" }
 av-metrics-decoders = { path = "av_metrics_decoders" }
+v_frame = { git = "https://github.com/FreezyLemon/v_frame", branch = "slim-plane-structs" }

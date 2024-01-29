@@ -171,7 +171,7 @@ fn calculate_plane_psnr_metrics<T: Pixel>(
     let max = (1 << bit_depth) - 1;
     PsnrMetrics {
         sq_err,
-        n_pixels: plane1.cfg.width * plane1.cfg.height,
+        n_pixels: plane1.cfg.width as usize * plane1.cfg.height as usize,
         sample_max: max,
     }
 }

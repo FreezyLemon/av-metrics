@@ -115,9 +115,9 @@ impl VideoMetric for Ciede2000 {
         frame1.can_compare(frame2)?;
 
         let dec = chroma_sampling.get_decimation().unwrap_or((1, 1));
-        let y_width = frame1.planes[0].cfg.width;
-        let y_height = frame1.planes[0].cfg.height;
-        let c_width = frame1.planes[1].cfg.width;
+        let y_width = frame1.planes[0].cfg.width as usize;
+        let y_height = frame1.planes[0].cfg.height as usize;
+        let c_width = frame1.planes[1].cfg.width as usize;
         let delta_e_row_fn = get_delta_e_row_fn(bit_depth, dec.0, self.use_simd);
         // let mut delta_e_vec: Vec<f32> = vec![0.0; y_width * y_height];
 
@@ -182,7 +182,7 @@ pub(crate) struct FrameRow<'a, T: Pixel> {
 
 type DeltaERowFn<T> = unsafe fn(FrameRow<T>, FrameRow<T>, &mut [f32]);
 
-fn get_delta_e_row_fn<T: Pixel>(bit_depth: usize, xdec: usize, simd: bool) -> DeltaERowFn<T> {
+fn get_delta_e_row_fn<T: Pixel>(bit_depth: usize, xdec: u8, simd: bool) -> DeltaERowFn<T> {
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     {
         if is_x86_feature_detected!("avx2") && xdec == 1 && simd {
