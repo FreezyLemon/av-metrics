@@ -6,7 +6,8 @@
 //! [Kyle Siefring's](https://github.com/KyleSiefring/dump_ciede2000).
 
 use crate::video::decode::Decoder;
-use crate::video::pixel::{CastFromPrimitive, Pixel};
+use crate::video::pixel::Pixel;
+use crate::video::ChromaSubsampling;
 use crate::video::VideoMetric;
 use crate::MetricsError;
 use std::f64;
@@ -61,7 +62,7 @@ pub fn calculate_frame_ciede<T: Pixel>(
     frame1: &Frame<T>,
     frame2: &Frame<T>,
     bit_depth: usize,
-    chroma_sampling: ChromaSampling,
+    chroma_sampling: ChromaSubsampling,
 ) -> Result<f64, Box<dyn Error>> {
     Ciede2000::default().process_frame(frame1, frame2, bit_depth, chroma_sampling)
 }
@@ -76,7 +77,7 @@ pub fn calculate_frame_ciede_nosimd<T: Pixel>(
     frame1: &Frame<T>,
     frame2: &Frame<T>,
     bit_depth: usize,
-    chroma_sampling: ChromaSampling,
+    chroma_sampling: ChromaSubsampling,
 ) -> Result<f64, Box<dyn Error>> {
     (Ciede2000 { use_simd: false }).process_frame(frame1, frame2, bit_depth, chroma_sampling)
 }
@@ -93,7 +94,6 @@ impl Default for Ciede2000 {
 
 use rayon::prelude::*;
 use v_frame::frame::Frame;
-use v_frame::prelude::ChromaSampling;
 
 impl VideoMetric for Ciede2000 {
     type FrameResult = f64;
@@ -104,7 +104,7 @@ impl VideoMetric for Ciede2000 {
         frame1: &Frame<T>,
         frame2: &Frame<T>,
         bit_depth: usize,
-        chroma_sampling: ChromaSampling,
+        chroma_sampling: ChromaSubsampling,
     ) -> Result<Self::FrameResult, Box<dyn Error>> {
         if (size_of::<T>() == 1 && bit_depth > 8) || (size_of::<T>() == 2 && bit_depth <= 8) {
             return Err(Box::new(MetricsError::InputMismatch {

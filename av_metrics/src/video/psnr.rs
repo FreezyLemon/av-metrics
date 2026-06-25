@@ -5,7 +5,6 @@
 //! See https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio for more details.
 
 use crate::video::decode::Decoder;
-use crate::video::pixel::CastFromPrimitive;
 use crate::video::pixel::Pixel;
 use crate::video::{PlanarMetrics, VideoMetric};
 use crate::MetricsError;
@@ -13,8 +12,8 @@ use std::error::Error;
 use std::mem::size_of;
 use v_frame::frame::Frame;
 use v_frame::plane::Plane;
-use v_frame::prelude::ChromaSampling;
 
+use super::ChromaSubsampling;
 use super::FrameCompare;
 
 /// Calculates the PSNR for two videos. Higher is better.
@@ -59,7 +58,7 @@ pub fn calculate_frame_psnr<T: Pixel>(
     frame1: &Frame<T>,
     frame2: &Frame<T>,
     bit_depth: usize,
-    chroma_sampling: ChromaSampling,
+    chroma_sampling: ChromaSubsampling,
 ) -> Result<PlanarMetrics, Box<dyn Error>> {
     let metrics = Psnr.process_frame(frame1, frame2, bit_depth, chroma_sampling)?;
     Ok(PlanarMetrics {
@@ -87,7 +86,7 @@ impl VideoMetric for Psnr {
         frame1: &Frame<T>,
         frame2: &Frame<T>,
         bit_depth: usize,
-        _chroma_sampling: ChromaSampling,
+        _chroma_sampling: ChromaSubsampling,
     ) -> Result<Self::FrameResult, Box<dyn Error>> {
         if (size_of::<T>() == 1 && bit_depth > 8) || (size_of::<T>() == 2 && bit_depth <= 8) {
             return Err(Box::new(MetricsError::InputMismatch {

@@ -2,10 +2,9 @@
 //! Prebuilt decoders are included in the `av-metrics-decoders` crate.
 
 use crate::video::pixel::Pixel;
-use crate::video::{ChromaSamplePosition, ChromaSampling};
+use crate::video::{ChromaSamplePosition, ChromaSubsampling};
 use std::cmp;
 use v_frame::frame::Frame;
-use v_frame::pixel::CastFromPrimitive;
 use v_frame::plane::Plane;
 
 /// A trait for allowing metrics to decode generic video formats.
@@ -48,7 +47,7 @@ pub struct VideoDetails {
     /// Bit-depth of the Video
     pub bit_depth: usize,
     /// ChromaSampling of the Video.
-    pub chroma_sampling: ChromaSampling,
+    pub chroma_sampling: ChromaSubsampling,
     /// Chroma Sampling Position of the Video.
     pub chroma_sample_position: ChromaSamplePosition,
     /// Add Time base of the Video.
@@ -63,7 +62,7 @@ impl Default for VideoDetails {
             width: 640,
             height: 480,
             bit_depth: 8,
-            chroma_sampling: ChromaSampling::Cs420,
+            chroma_sampling: ChromaSubsampling::Yuv420,
             chroma_sample_position: ChromaSamplePosition::Unknown,
             time_base: Rational { num: 30, den: 1 },
             luma_padding: 0,

@@ -9,7 +9,6 @@
 //! See https://en.wikipedia.org/wiki/Structural_similarity for more details.
 
 use crate::video::decode::Decoder;
-use crate::video::pixel::CastFromPrimitive;
 use crate::video::pixel::Pixel;
 use crate::video::ChromaWeight;
 use crate::video::{PlanarMetrics, VideoMetric};
@@ -20,8 +19,8 @@ use std::f64::consts::{E, PI};
 use std::mem::size_of;
 use v_frame::frame::Frame;
 use v_frame::plane::Plane;
-use v_frame::prelude::ChromaSampling;
 
+use super::ChromaSubsampling;
 use super::FrameCompare;
 
 /// Calculates the SSIM score between two videos. Higher is better.
@@ -47,7 +46,7 @@ pub fn calculate_frame_ssim<T: Pixel>(
     frame1: &Frame<T>,
     frame2: &Frame<T>,
     bit_depth: usize,
-    chroma_sampling: ChromaSampling,
+    chroma_sampling: ChromaSubsampling,
 ) -> Result<PlanarMetrics, Box<dyn Error>> {
     let processor = Ssim::default();
     let result = processor.process_frame(frame1, frame2, bit_depth, chroma_sampling)?;
@@ -79,7 +78,7 @@ impl VideoMetric for Ssim {
         frame1: &Frame<T>,
         frame2: &Frame<T>,
         bit_depth: usize,
-        _chroma_sampling: ChromaSampling,
+        _chroma_sampling: ChromaSubsampling,
     ) -> Result<Self::FrameResult, Box<dyn Error>> {
         if (size_of::<T>() == 1 && bit_depth > 8) || (size_of::<T>() == 2 && bit_depth <= 8) {
             return Err(Box::new(MetricsError::InputMismatch {
@@ -204,7 +203,7 @@ pub fn calculate_frame_msssim<T: Pixel>(
     frame1: &Frame<T>,
     frame2: &Frame<T>,
     bit_depth: usize,
-    chroma_sampling: ChromaSampling,
+    chroma_sampling: ChromaSubsampling,
 ) -> Result<PlanarMetrics, Box<dyn Error>> {
     let processor = MsSsim::default();
     let result = processor.process_frame(frame1, frame2, bit_depth, chroma_sampling)?;
@@ -236,7 +235,7 @@ impl VideoMetric for MsSsim {
         frame1: &Frame<T>,
         frame2: &Frame<T>,
         bit_depth: usize,
-        _chroma_sampling: ChromaSampling,
+        _chroma_sampling: ChromaSubsampling,
     ) -> Result<Self::FrameResult, Box<dyn Error>> {
         if (size_of::<T>() == 1 && bit_depth > 8) || (size_of::<T>() == 2 && bit_depth <= 8) {
             return Err(Box::new(MetricsError::InputMismatch {
