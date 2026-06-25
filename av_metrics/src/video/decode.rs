@@ -119,13 +119,13 @@ pub fn convert_chroma_data<T: Pixel>(
 
     let get_pixel = if source_bytewidth == 1 {
         fn convert_u8(line: &[u8], index: usize) -> i32 {
-            i32::cast_from(line[index])
+            i32::from(line[index])
         }
         convert_u8
     } else {
         fn convert_u16(line: &[u8], index: usize) -> i32 {
             let index = index * 2;
-            i32::cast_from(u16::cast_from(line[index + 1]) << 8 | u16::cast_from(line[index]))
+            i32::from(u16::from_ne_bytes([line[index + 1], line[index]]))
         }
         convert_u16
     };
@@ -139,55 +139,50 @@ pub fn convert_chroma_data<T: Pixel>(
         let out_row = &mut output_data[(y * width)..];
         let breakpoint = cmp::min(width, 2);
         for x in 0..breakpoint {
-            out_row[x] = T::cast_from(clamp(
-                (4 * get_pixel(in_row, 0) - 17 * get_pixel(in_row, x.saturating_sub(1))
-                    + 114 * get_pixel(in_row, x)
-                    + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))
-                    - 9 * get_pixel(in_row, cmp::min(x + 2, width - 1))
-                    + get_pixel(in_row, cmp::min(x + 3, width - 1))
-                    + 64)
-                    >> 7,
-                0,
-                (1 << bit_depth) - 1,
-            ));
+            let val = (4 * get_pixel(in_row, 0) - 17 * get_pixel(in_row, x.saturating_sub(1))
+                + 114 * get_pixel(in_row, x)
+                + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))
+                - 9 * get_pixel(in_row, cmp::min(x + 2, width - 1))
+                + get_pixel(in_row, cmp::min(x + 3, width - 1))
+                + 64)
+                >> 7;
+
+            let clamped = val
+                .clamp(0, (1 << bit_depth) - 1)
+                .try_into()
+                .expect("fits into u16");
+            out_row[x] = T::try_from(clamped).expect("clamped value fits into T");
         }
         let breakpoint2 = width - 3;
         for x in breakpoint..breakpoint2 {
-            out_row[x] = T::cast_from(clamp(
-                (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
-                    + 114 * get_pixel(in_row, x)
-                    + 35 * get_pixel(in_row, x + 1)
-                    - 9 * get_pixel(in_row, x + 2)
-                    + get_pixel(in_row, x + 3)
-                    + 64)
-                    >> 7,
-                0,
-                (1 << bit_depth) - 1,
-            ));
+            let val = (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
+                + 114 * get_pixel(in_row, x)
+                + 35 * get_pixel(in_row, x + 1)
+                - 9 * get_pixel(in_row, x + 2)
+                + get_pixel(in_row, x + 3)
+                + 64)
+                >> 7;
+
+            let clamped = val
+                .clamp(0, (1 << bit_depth) - 1)
+                .try_into()
+                .expect("fits into u16");
+            out_row[x] = T::try_from(clamped).expect("clamped value fits into T");
         }
         for x in breakpoint2..width {
-            out_row[x] = T::cast_from(clamp(
-                (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
-                    + 114 * get_pixel(in_row, x)
-                    + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))
-                    - 9 * get_pixel(in_row, cmp::min(x + 2, width - 1))
-                    + get_pixel(in_row, width - 1)
-                    + 64)
-                    >> 7,
-                0,
-                (1 << bit_depth) - 1,
-            ));
-        }
-    }
-}
+            let val = (4 * get_pixel(in_row, x - 2) - 17 * get_pixel(in_row, x - 1)
+                + 114 * get_pixel(in_row, x)
+                + 35 * get_pixel(in_row, cmp::min(x + 1, width - 1))
+                - 9 * get_pixel(in_row, cmp::min(x + 2, width - 1))
+                + get_pixel(in_row, width - 1)
+                + 64)
+                >> 7;
 
-#[inline]
-fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
-    if input < min {
-        min
-    } else if input > max {
-        max
-    } else {
-        input
+            let clamped = val
+                .clamp(0, (1 << bit_depth) - 1)
+                .try_into()
+                .expect("fits into u16");
+            out_row[x] = T::try_from(clamped).expect("clamped value fits into T");
+        }
     }
 }

@@ -247,8 +247,8 @@ fn calculate_plane_psnr_hvs<T: Pixel>(
 
             for i in 0..8 {
                 for j in 0..8 {
-                    p1[i * 8 + j] = i16::cast_from(plane1.data()[(y + i) * stride + x + j]);
-                    p2[i * 8 + j] = i16::cast_from(plane2.data()[(y + i) * stride + x + j]);
+                    p1[i * 8 + j] = plane1.data()[(y + i) * stride + x + j].into().cast_signed();
+                    p2[i * 8 + j] = plane2.data()[(y + i) * stride + x + j].into().cast_signed();
 
                     let sub = ((i & 12) >> 2) + ((j & 12) >> 1);
                     p1_gmean += p1[i * 8 + j] as f64;

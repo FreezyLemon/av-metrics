@@ -480,7 +480,11 @@ fn build_gaussian_kernel(sigma: f64, max_len: usize, kernel_weight: usize) -> Ve
 }
 
 fn plane_to_vec<T: Pixel>(input: &Plane<T>) -> Vec<u32> {
-    input.data.iter().map(|pix| u32::cast_from(*pix)).collect()
+    input
+        .data()
+        .iter()
+        .map(|&pix| u32::from(pix.into()))
+        .collect()
 }
 
 // This acts differently from downscaling a plane, and is what

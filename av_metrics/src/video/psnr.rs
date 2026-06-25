@@ -198,10 +198,10 @@ fn calculate_psnr(metrics: PsnrMetrics) -> f64 {
 /// to the compressed version.
 fn calculate_plane_total_squared_error<T: Pixel>(plane1: &Plane<T>, plane2: &Plane<T>) -> f64 {
     plane1
-        .data
+        .data()
         .iter()
-        .zip(plane2.data.iter())
-        .map(|(a, b)| (i32::cast_from(*a) - i32::cast_from(*b)).unsigned_abs() as u64)
+        .zip(plane2.data().iter())
+        .map(|(&a, &b)| u64::from(a.into().abs_diff(b.into())))
         .map(|err| err * err)
         .sum::<u64>() as f64
 }
