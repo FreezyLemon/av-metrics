@@ -1,62 +1,53 @@
 name: deploy
 
+permissions:
+  contents: write # required to make a release
+
 on:
   push:
     tags:
       - 'v*.*.*'
 
 jobs:
-
-  cli-binaries:
-
+  create-binaries:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
 
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
+      run: rustup toolchain install --profile minimal --override stable
 
     - name: Build
-      run: |
-        cargo build --release
+      run: cargo build --release --locked
 
-    - name: Upload binaries
-      uses: actions/upload-artifact@v2
+    - name: Upload binary
+      uses: actions/upload-artifact@v7
       with:
-        path: target\release\av-metrics-tool.exe
+        path: target/release/av-metrics-tool.exe
 
   deploy:
-
-    needs: [cli-binaries]
-
+    needs: [create-binaries]
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Download the zip
-      uses: actions/download-artifact@v2
-      with:
-        name: artifact
+    - uses: actions/checkout@v7
+    - name: Download binary
+      uses: actions/download-artifact@v8
 
     - name: Handle release data and files
       id: data
       run: |
-        VERSION=$(head -n 1 CHANGELOG.md | tr -d "## Version ")
-        echo "::set-output name=version::$VERSION"
-        tail -n +2 CHANGELOG.md | sed -e '/^$/,$d' > CHANGELOG.txt
+        VERSION=$(grep -m 1 '^## Version' CHANGELOG.md | sed 's/## Version //')
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        awk 'BEGIN{p=0} /^## Version/{if(p) exit; p=1; next} p{print}' CHANGELOG.md > CHANGELOG.txt
+        strip av-metrics-tool.exe
 
     - name: Create a release
       uses: softprops/action-gh-release@v1
       with:
         name: Version ${{ steps.data.outputs.version }}
         body_path: CHANGELOG.txt
-        files: |
-          av-metrics-tool.exe
+        files: av-metrics-tool.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
