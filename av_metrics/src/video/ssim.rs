@@ -98,14 +98,15 @@ impl VideoMetric for Ssim {
 
         rayon::scope(|s| {
             s.spawn(|_| {
+                let y_plane = &frame1.y_plane;
                 let y_kernel = build_gaussian_kernel(
-                    frame1.planes[0].cfg.height as f64 * 1.5 / 256.0,
-                    cmp::min(frame1.planes[0].cfg.width, frame1.planes[0].cfg.height),
+                    y_plane.height() as f64 * 1.5 / 256.0,
+                    y_plane.width().min(y_plane.height()),
                     KERNEL_WEIGHT,
                 );
                 y = calculate_plane_ssim(
-                    &frame1.planes[0],
-                    &frame2.planes[0],
+                    &frame1.y_plane,
+                    &frame2.y_plane,
                     sample_max,
                     &y_kernel,
                     &y_kernel,
@@ -113,14 +114,15 @@ impl VideoMetric for Ssim {
             });
 
             s.spawn(|_| {
+                let u_plane = frame1.u_plane.as_ref().expect("frame 1 has U plane");
                 let u_kernel = build_gaussian_kernel(
-                    frame1.planes[1].cfg.height as f64 * 1.5 / 256.0,
-                    cmp::min(frame1.planes[1].cfg.width, frame1.planes[1].cfg.height),
+                    u_plane.height() as f64 * 1.5 / 256.0,
+                    u_plane.width().min(u_plane.height()),
                     KERNEL_WEIGHT,
                 );
                 u = calculate_plane_ssim(
-                    &frame1.planes[1],
-                    &frame2.planes[1],
+                    u_plane,
+                    frame2.u_plane.as_ref().expect("frame 2 has U plane"),
                     sample_max,
                     &u_kernel,
                     &u_kernel,
@@ -128,14 +130,15 @@ impl VideoMetric for Ssim {
             });
 
             s.spawn(|_| {
+                let v_plane = frame1.v_plane.as_ref().expect("frame 1 has V plane");
                 let v_kernel = build_gaussian_kernel(
-                    frame1.planes[2].cfg.height as f64 * 1.5 / 256.0,
-                    cmp::min(frame1.planes[2].cfg.width, frame1.planes[2].cfg.height),
+                    v_plane.height() as f64 * 1.5 / 256.0,
+                    v_plane.width().min(v_plane.height()),
                     KERNEL_WEIGHT,
                 );
                 v = calculate_plane_ssim(
-                    &frame1.planes[2],
-                    &frame2.planes[2],
+                    v_plane,
+                    frame2.v_plane.as_ref().expect("frame 2 has V plane"),
                     sample_max,
                     &v_kernel,
                     &v_kernel,
@@ -250,14 +253,20 @@ impl VideoMetric for MsSsim {
         let mut v = 0.0;
 
         rayon::scope(|s| {
+            s.spawn(|_| y = calculate_plane_msssim(&frame1.y_plane, &frame2.y_plane, bit_depth));
             s.spawn(|_| {
-                y = calculate_plane_msssim(&frame1.planes[0], &frame2.planes[0], bit_depth)
+                u = calculate_plane_msssim(
+                    frame1.plane(1).expect("frame 1 has plane 1"),
+                    frame2.plane(1).expect("frame 2 has plane 1"),
+                    bit_depth,
+                )
             });
             s.spawn(|_| {
-                u = calculate_plane_msssim(&frame1.planes[1], &frame2.planes[1], bit_depth)
-            });
-            s.spawn(|_| {
-                v = calculate_plane_msssim(&frame1.planes[2], &frame2.planes[2], bit_depth)
+                v = calculate_plane_msssim(
+                    frame1.plane(2).expect("frame 1 has plane 2"),
+                    frame2.plane(2).expect("frame 2 has plane 2"),
+                    bit_depth,
+                )
             });
         });
 
@@ -315,8 +324,8 @@ fn calculate_plane_ssim<T: Pixel>(
     calculate_plane_ssim_internal(
         &vec1,
         &vec2,
-        plane1.cfg.width,
-        plane1.cfg.height,
+        plane1.width(),
+        plane1.height(),
         sample_max,
         vert_kernel,
         horiz_kernel,
@@ -411,8 +420,8 @@ fn calculate_plane_msssim<T: Pixel>(plane1: &Plane<T>, plane2: &Plane<T>, bit_de
     let mut sample_max = (1 << bit_depth) - 1;
     let mut ssim = [0.0; 5];
     let mut cs = [0.0; 5];
-    let mut width = plane1.cfg.width;
-    let mut height = plane1.cfg.height;
+    let mut width = plane1.width();
+    let mut height = plane1.height();
     let mut plane1 = plane_to_vec(plane1);
     let mut plane2 = plane_to_vec(plane2);
 

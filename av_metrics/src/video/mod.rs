@@ -22,9 +22,9 @@ trait FrameCompare {
 
 impl<T: Pixel> FrameCompare for Frame<T> {
     fn can_compare(&self, other: &Self) -> Result<(), MetricsError> {
-        self.planes[0].can_compare(&other.planes[0])?;
-        self.planes[1].can_compare(&other.planes[1])?;
-        self.planes[2].can_compare(&other.planes[2])?;
+        self.plane(0).can_compare(&other.plane(0))?;
+        self.plane(1).can_compare(&other.plane(1))?;
+        self.plane(2).can_compare(&other.plane(2))?;
 
         Ok(())
     }
@@ -34,14 +34,14 @@ pub(crate) trait PlaneCompare {
     fn can_compare(&self, other: &Self) -> Result<(), MetricsError>;
 }
 
-impl<T: Pixel> PlaneCompare for Plane<T> {
+impl<T: Pixel> PlaneCompare for Option<&Plane<T>> {
     fn can_compare(&self, other: &Self) -> Result<(), MetricsError> {
-        if self.cfg != other.cfg {
-            return Err(MetricsError::InputMismatch {
+        match (self, other) {
+            (Some(s), Some(o)) if s.geometry() == o.geometry() => Ok(()),
+            _ => Err(MetricsError::InputMismatch {
                 reason: "Video resolution does not match",
-            });
+            }),
         }
-        Ok(())
     }
 }
 

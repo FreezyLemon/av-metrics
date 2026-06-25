@@ -7,8 +7,8 @@ use av_metrics::video::decode::convert_chroma_data;
 use av_metrics::video::psnr::calculate_frame_psnr;
 use av_metrics::video::psnr_hvs::calculate_frame_psnr_hvs;
 use av_metrics::video::ssim::{calculate_frame_msssim, calculate_frame_ssim};
-use av_metrics::video::Frame;
 use av_metrics::video::{ChromaSamplePosition, ChromaSubsampling, Pixel};
+use av_metrics::video::{Frame, FrameBuilder};
 use criterion::Criterion;
 use std::fs::File;
 use y4m::Decoder as Y4MDec;
@@ -24,12 +24,18 @@ fn get_video_frame<T: Pixel>(filename: &str) -> Frame<T> {
     let height = dec.get_height();
     let bytes = dec.get_bytes_per_sample();
     let frame = dec.read_frame().unwrap();
-    let mut f: Frame<T> = Frame::new_with_padding(width, height, chroma_sampling, 0);
+    let mut f: Frame<T> = FrameBuilder::new(width, height, chroma_sampling, bit_depth as u8)
+        .build()
+        .expect("can build frame");
 
-    let (chroma_width, _) = chroma_sampling.chroma_dimensions(width, height).expect("not monochrome and can subsample");
-    f.planes[0].copy_from_raw_u8(frame.get_y_plane(), width * bytes, bytes);
+    let (chroma_width, _) = chroma_sampling
+        .chroma_dimensions(width, height)
+        .expect("not monochrome and can subsample");
+    f.y_plane
+        .copy_from_u8_slice_with_stride(frame.get_y_plane(), width * bytes)
+        .expect("can copy");
     convert_chroma_data(
-        &mut f.planes[1],
+        f.plane_mut(1).expect("has plane 1"),
         chroma_sample_pos,
         bit_depth,
         frame.get_u_plane(),
@@ -37,7 +43,7 @@ fn get_video_frame<T: Pixel>(filename: &str) -> Frame<T> {
         bytes,
     );
     convert_chroma_data(
-        &mut f.planes[2],
+        f.plane_mut(2).expect("has plane 2"),
         chroma_sample_pos,
         bit_depth,
         frame.get_v_plane(),

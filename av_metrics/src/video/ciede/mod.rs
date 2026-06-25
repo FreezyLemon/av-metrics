@@ -115,9 +115,9 @@ impl VideoMetric for Ciede2000 {
         frame1.can_compare(frame2)?;
 
         let dec = chroma_sampling.get_decimation().unwrap_or((1, 1));
-        let y_width = frame1.planes[0].cfg.width;
-        let y_height = frame1.planes[0].cfg.height;
-        let c_width = frame1.planes[1].cfg.width;
+        let y_width = frame1.y_plane.width();
+        let y_height = frame1.y_plane.height();
+        let c_width = frame1.plane(1).expect("has U plane").width();
         let delta_e_row_fn = get_delta_e_row_fn(bit_depth, dec.0, self.use_simd);
         // let mut delta_e_vec: Vec<f32> = vec![0.0; y_width * y_height];
 
@@ -135,14 +135,14 @@ impl VideoMetric for Ciede2000 {
             unsafe {
                 delta_e_row_fn(
                     FrameRow {
-                        y: &frame1.planes[0].data[y_range.clone()],
-                        u: &frame1.planes[1].data[c_range.clone()],
-                        v: &frame1.planes[2].data[c_range.clone()],
+                        y: &frame1.plane(0).expect("frame 1 has plane 0").data()[y_range.clone()],
+                        u: &frame1.plane(1).expect("frame 1 has plane 1").data()[c_range.clone()],
+                        v: &frame1.plane(2).expect("frame 1 has plane 2").data()[c_range.clone()],
                     },
                     FrameRow {
-                        y: &frame2.planes[0].data[y_range],
-                        u: &frame2.planes[1].data[c_range.clone()],
-                        v: &frame2.planes[2].data[c_range],
+                        y: &frame2.plane(0).expect("frame 2 has plane 0").data()[y_range],
+                        u: &frame2.plane(1).expect("frame 2 has plane 1").data()[c_range.clone()],
+                        v: &frame2.plane(2).expect("frame 2 has plane 2").data()[c_range],
                     },
                     &mut delta_e_vec[..],
                 );

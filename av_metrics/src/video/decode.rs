@@ -111,7 +111,9 @@ pub fn convert_chroma_data<T: Pixel>(
 ) {
     if chroma_pos != ChromaSamplePosition::Vertical {
         // TODO: Also convert Interpolated chromas
-        plane_data.copy_from_raw_u8(source, source_stride, source_bytewidth);
+        plane_data
+            .copy_from_u8_slice_with_stride(source, source_stride)
+            .expect("can copy");
         return;
     }
 
@@ -128,9 +130,9 @@ pub fn convert_chroma_data<T: Pixel>(
         convert_u16
     };
 
-    let output_data = &mut plane_data.data;
-    let width = plane_data.cfg.width;
-    let height = plane_data.cfg.height;
+    let width = plane_data.width();
+    let height = plane_data.height();
+    let output_data = plane_data.data_mut();
     for y in 0..height {
         // Filter: [4 -17 114 35 -9 1]/128, derived from a 6-tap Lanczos window.
         let in_row = &source[(y * source_stride)..];

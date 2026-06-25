@@ -102,13 +102,25 @@ impl VideoMetric for Psnr {
 
         rayon::scope(|s| {
             s.spawn(|_| {
-                y = calculate_plane_psnr_metrics(&frame1.planes[0], &frame2.planes[0], bit_depth)
+                y = calculate_plane_psnr_metrics(
+                    frame1.plane(0).expect("frame 1 has plane 0"),
+                    frame2.plane(0).expect("frame 2 has plane 0"),
+                    bit_depth,
+                )
             });
             s.spawn(|_| {
-                u = calculate_plane_psnr_metrics(&frame1.planes[1], &frame2.planes[1], bit_depth)
+                u = calculate_plane_psnr_metrics(
+                    frame1.plane(1).expect("frame 1 has plane 1"),
+                    frame2.plane(1).expect("frame 2 has plane 1"),
+                    bit_depth,
+                )
             });
             s.spawn(|_| {
-                v = calculate_plane_psnr_metrics(&frame1.planes[2], &frame2.planes[2], bit_depth)
+                v = calculate_plane_psnr_metrics(
+                    frame1.plane(2).expect("frame 1 has plane 2"),
+                    frame2.plane(2).expect("frame 2 has plane 2"),
+                    bit_depth,
+                )
             });
         });
 
@@ -169,7 +181,7 @@ fn calculate_plane_psnr_metrics<T: Pixel>(
     let max = (1 << bit_depth) - 1;
     PsnrMetrics {
         sq_err,
-        n_pixels: plane1.cfg.width * plane1.cfg.height,
+        n_pixels: plane1.width() * plane1.height(),
         sample_max: max,
     }
 }

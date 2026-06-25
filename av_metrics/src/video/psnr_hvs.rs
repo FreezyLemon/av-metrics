@@ -90,13 +90,28 @@ impl VideoMetric for PsnrHvs {
 
         rayon::scope(|s| {
             s.spawn(|_| {
-                y = calculate_plane_psnr_hvs(&frame1.planes[0], &frame2.planes[0], 0, bit_depth)
+                y = calculate_plane_psnr_hvs(
+                    frame1.plane(0).expect("frame 1 has plane 0"),
+                    frame2.plane(0).expect("frame 2 has plane 0"),
+                    0,
+                    bit_depth,
+                )
             });
             s.spawn(|_| {
-                u = calculate_plane_psnr_hvs(&frame1.planes[1], &frame2.planes[1], 1, bit_depth)
+                u = calculate_plane_psnr_hvs(
+                    frame1.plane(1).expect("frame 1 has plane 1"),
+                    frame2.plane(1).expect("frame 2 has plane 1"),
+                    1,
+                    bit_depth,
+                )
             });
             s.spawn(|_| {
-                v = calculate_plane_psnr_hvs(&frame1.planes[2], &frame2.planes[2], 2, bit_depth)
+                v = calculate_plane_psnr_hvs(
+                    frame1.plane(2).expect("frame 1 has plane 2"),
+                    frame2.plane(2).expect("frame 2 has plane 2"),
+                    2,
+                    bit_depth,
+                )
             });
         });
 
@@ -208,15 +223,15 @@ fn calculate_plane_psnr_hvs<T: Pixel>(
         }
     }
 
-    let height = plane1.cfg.height;
-    let width = plane1.cfg.width;
-    let stride = plane1.cfg.stride;
+    let height = plane1.height();
+    let width = plane1.width();
+    let stride = plane1.geometry().stride();
     let mut p1 = [0i16; 8 * 8];
     let mut p2 = [0i16; 8 * 8];
     let mut dct_p1 = [0i32; 8 * 8];
     let mut dct_p2 = [0i32; 8 * 8];
-    assert!(plane1.data.len() >= stride * height);
-    assert!(plane2.data.len() >= stride * height);
+    assert!(plane1.data().len() >= stride * height);
+    assert!(plane2.data().len() >= stride * height);
     for y in (0..(height - STEP)).step_by(STEP) {
         for x in (0..(width - STEP)).step_by(STEP) {
             let mut p1_means = [0.0; 4];
@@ -232,8 +247,8 @@ fn calculate_plane_psnr_hvs<T: Pixel>(
 
             for i in 0..8 {
                 for j in 0..8 {
-                    p1[i * 8 + j] = i16::cast_from(plane1.data[(y + i) * stride + x + j]);
-                    p2[i * 8 + j] = i16::cast_from(plane2.data[(y + i) * stride + x + j]);
+                    p1[i * 8 + j] = i16::cast_from(plane1.data()[(y + i) * stride + x + j]);
+                    p2[i * 8 + j] = i16::cast_from(plane2.data()[(y + i) * stride + x + j]);
 
                     let sub = ((i & 12) >> 2) + ((j & 12) >> 1);
                     p1_gmean += p1[i * 8 + j] as f64;
