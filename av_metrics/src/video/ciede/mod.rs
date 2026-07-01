@@ -243,15 +243,6 @@ impl Colorspace for BD12_444 {
     const X_DECIMATION: u32 = 0;
 }
 
-fn twice<T>(
-    i: T,
-) -> itertools::Interleave<<T as IntoIterator>::IntoIter, <T as IntoIterator>::IntoIter>
-where
-    T: IntoIterator + Clone,
-{
-    itertools::interleave(i.clone(), i)
-}
-
 pub(crate) trait DeltaEScalar: Colorspace {
     fn delta_e_scalar(yuv1: (u16, u16, u16), yuv2: (u16, u16, u16)) -> f32 {
         let scale = (1 << (Self::BIT_DEPTH - 8)) as f32;
@@ -281,30 +272,19 @@ pub(crate) trait DeltaEScalar: Colorspace {
         row2: FrameRow<T>,
         res_row: &mut [f32],
     ) {
-        if Self::X_DECIMATION == 1 {
-            for (y1, u1, v1, y2, u2, v2, res) in izip!(
-                row1.y,
-                twice(row1.u),
-                twice(row1.v),
-                row2.y,
-                twice(row2.u),
-                twice(row2.v),
-                res_row
-            ) {
-                *res = Self::delta_e_scalar(
-                    ((*y1).into(), (*u1).into(), (*v1).into()),
-                    ((*y2).into(), (*u2).into(), (*v2).into()),
-                );
-            }
-        } else {
-            for (y1, u1, v1, y2, u2, v2, res) in
-                izip!(row1.y, row1.u, row1.v, row2.y, row2.u, row2.v, res_row)
-            {
-                *res = Self::delta_e_scalar(
-                    ((*y1).into(), (*u1).into(), (*v1).into()),
-                    ((*y2).into(), (*u2).into(), (*v2).into()),
-                );
-            }
+        for idx in 0..row1.y.len() {
+            res_row[idx] = Self::delta_e_scalar(
+                (
+                    row1.y[idx].into(),
+                    row1.u[idx >> Self::X_DECIMATION].into(),
+                    row1.v[idx >> Self::X_DECIMATION].into(),
+                ),
+                (
+                    row2.y[idx].into(),
+                    row2.u[idx >> Self::X_DECIMATION].into(),
+                    row2.v[idx >> Self::X_DECIMATION].into(),
+                ),
+            );
         }
     }
 }
