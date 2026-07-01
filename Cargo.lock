@@ -85,7 +85,6 @@ dependencies = [
  "crossbeam",
  "itertools 0.14.0",
  "lab",
- "num-traits",
  "rayon",
  "serde",
  "thiserror",
