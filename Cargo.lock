@@ -67,9 +67,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.70"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7de8ce5e0f9f8d88245311066a578d72b7af3e7088f32783804676302df237e4"
+checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
 
 [[package]]
 name = "autocfg"
@@ -391,9 +391,9 @@ checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
 name = "ffmpeg-sys-the-third"
-version = "4.1.0+ffmpeg-8.0"
+version = "5.0.0+ffmpeg-8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0c1bf5e362dfb2fbdf9b3e634f3d7f7f0f057103689f518ba4fd96813faf1ef"
+checksum = "b00c204bb97c2b6c0329104c3e8bcf58d4d13cc88a04233326570672e0c2c5c9"
 dependencies = [
  "bindgen",
  "cc",
@@ -405,9 +405,9 @@ dependencies = [
 
 [[package]]
 name = "ffmpeg-the-third"
-version = "4.1.0+ffmpeg-8.0"
+version = "5.0.0+ffmpeg-8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71a274244c87178cd01144536061d63114cecea74cb1037a3614c81cc7ca01e0"
+checksum = "791f0d9315e4f0a0861fa5c8ca8d70a1bd099cce72bff111b4f7ed8d6ebe8ba3"
 dependencies = [
  "bitflags",
  "ffmpeg-sys-the-third",
