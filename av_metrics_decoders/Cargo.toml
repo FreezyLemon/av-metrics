@@ -9,8 +9,8 @@ repository = "https://github.com/rust-av/av-metrics"
 include = ["src/**/*", "LICENSE"]
 
 [dependencies]
+av-metrics = { workspace = true }
 anyhow = "1.0.103"
-av-metrics = "0.9"
 y4m = { version = "0.8", optional = true }
 
 [dependencies.vapoursynth]
